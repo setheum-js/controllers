@@ -23,8 +23,12 @@ type ExtractEventPayload<Event, T> = Event extends { type: T; payload: infer P }
   ? P
   : never;
 
-type ActionConstraint = { type: string; handler: (...args: any) => unknown };
-type EventConstraint = { type: string; payload: unknown[] };
+export type ActionConstraint = {
+  type: string;
+  handler: (...args: any) => unknown;
+};
+
+export type EventConstraint = { type: string; payload: unknown[] };
 
 /**
  * A namespaced string
@@ -440,8 +444,8 @@ export class ControllerMessenger<
    */
   getRestricted<
     N extends string,
-    AllowedAction extends string | never,
-    AllowedEvent extends string | never
+    AllowedAction extends string,
+    AllowedEvent extends string
   >({
     name,
     allowedActions,

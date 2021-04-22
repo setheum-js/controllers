@@ -7,6 +7,8 @@ import type { Draft, Patch } from 'immer';
 import type {
   RestrictedControllerMessenger,
   Namespaced,
+  ActionConstraint,
+  EventConstraint,
 } from './ControllerMessenger';
 
 enablePatches();
@@ -105,29 +107,23 @@ type Json =
   | Json[]
   | { [prop: string]: Json };
 
-type StateChangeEvent<N extends string, S, E> = E extends {
-  type: `${N}:stateChange`;
-  payload: [S, Patch[]];
-}
-  ? E
-  : never;
-
 /**
  * Controller class that provides state management, subscriptions, and state metadata
  */
 export class BaseController<
   N extends string,
-  S extends Record<string, unknown>
+  S extends Record<string, unknown>,
+  Messenger extends RestrictedControllerMessenger<
+    N,
+    ActionConstraint,
+    EventConstraint,
+    any,
+    any
+  >
 > {
   private internalState: IsJsonable<S>;
 
-  protected messagingSystem: RestrictedControllerMessenger<
-    N,
-    any,
-    StateChangeEvent<N, S, any>,
-    string | never,
-    string | never
-  >;
+  protected messagingSystem: Messenger;
 
   /**
    * The name of the controller.
@@ -154,13 +150,7 @@ export class BaseController<
     name,
     state,
   }: {
-    messenger: RestrictedControllerMessenger<
-      N,
-      any,
-      StateChangeEvent<N, S, any>,
-      string | never,
-      string | never
-    >;
+    messenger: Messenger;
     metadata: StateMetadata<S>;
     name: N;
     state: IsJsonable<S>;
