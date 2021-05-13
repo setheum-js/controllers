@@ -157,8 +157,12 @@ export class CurrencyRateController extends BaseController<
       return undefined;
     }
     const releaseLock = await this.mutex.acquire();
+
+    let conversionDate: number = Date.now() / 1000;
+    let conversionRate: number | null = null;
+    let usdConversionRate: number | null = null;
     try {
-      const {
+      ({
         conversionDate,
         conversionRate,
         usdConversionRate,
@@ -166,7 +170,12 @@ export class CurrencyRateController extends BaseController<
         this.activeCurrency,
         this.activeNativeCurrency,
         this.includeUSDRate,
-      );
+      ));
+    } catch (error) {
+      if (!error.message.includes('market does not exist for this coin pair')) {
+        throw error;
+      }
+    } finally {
       const newState: CurrencyRateState = {
         conversionDate,
         conversionRate,
@@ -177,11 +186,9 @@ export class CurrencyRateController extends BaseController<
           : this.defaultState.usdConversionRate,
       };
       this.update(newState);
-
-      return this.state;
-    } finally {
       releaseLock();
     }
+    return this.state;
   }
 }
 
